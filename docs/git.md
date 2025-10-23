@@ -86,15 +86,17 @@
 ```bash
 git checkout dev
 git pull
-git checkout -b feature/12/auth-system/fox
+git checkout -b task-12
 ```
 3. Делаем коммиты по правилам.
 4. Отправляем ветку на GitHub:
 ```bash
-git push -u origin feature/12/auth-system/fox
+git push -u origin task-12
 ```
 5. Создаём PR → ждём ревью → после одобрения вливаем в `dev`.
 6. После завершения релиза `dev` вливается в `main`.
+
+> При создании Pull Request-а в описание всегда указывать описание задачи из YouGile-а
 
 ---
 
