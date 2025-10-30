@@ -1,0 +1,42 @@
+{
+  "name": "litera.corp",
+  "version": "1.0.0",
+  "description": "Litera messenger",
+  "keywords": [
+    "messenger",
+    "litera"
+  ],
+  "homepage": "https://github.com/Litera-corp/LiteraMessenger#readme",
+  "bugs": {
+    "url": "https://github.com/Litera-corp/LiteraMessenger/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Litera-corp/LiteraMessenger.git"
+  },
+  "license": "ISC",
+  "author": "litera.corp",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-pattern .gitignore",
+    "lint:check": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --ignore-pattern .gitignore",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "eslint": "^9.38.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "eslint-plugin-vue": "^10.5.1",
+    "globals": "^16.4.0",
+    "prettier": "^3.6.2",
+    "sass": "^1.93.2",
+    "vite": "^7.1.12"
+  },
+  "dependencies": {
+    "@vitejs/plugin-vue": "^6.0.1",
+    "vue-router": "^4.6.3"
+  }
+}
