@@ -4,7 +4,6 @@
 service_name/
 ├── app/
 │   ├── __init__.py
-│   ├── main.py                 # Точка входа приложения (FastAPI instance)
 │   ├── config.py               # Настройки приложения (Pydantic BaseSettings)
 │   ├── database.py             # Подключение PostgreSQL (SQLAlchemy + Alembic)
 │   ├── kafka.py                # Настройка Kafka producer/consumer (aiokafka)
@@ -32,6 +31,7 @@ service_name/
 │   ├── Dockerfile
 │   └── docker-compose.yml
 │
+├── main.py                 # Точка входа приложения (FastAPI instance)
 ├── .env.example
 ├── requirements.txt
 └── README.md
