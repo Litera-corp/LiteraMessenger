@@ -32,7 +32,6 @@ service_name/
 │   ├── Dockerfile
 │   └── docker-compose.yml
 │
-├── main.py                     # Точка входа приложения (FastAPI instance)
 ├── .env.example
 ├── requirements.txt
 └── README.md
