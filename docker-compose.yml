@@ -1,0 +1,45 @@
+version: "3.8"
+
+services:
+  gateway_service:
+    image: litera.corp/gateway_service
+    build:
+      context: backend/gateway_service
+      dockerfile: docker/Dockerfile
+    container_name: litera_corp-gateway
+    restart: on-failure
+    ports:
+      - "7701:8000"
+    volumes:
+      - ./backend/gateway/:/project
+    networks:
+      - backend_services_network
+
+  postgres_db:
+    image: postgres
+    container_name: litera_corp-postgresql
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DATABASE}
+    volumes:
+      - pgdb:/data/postgres
+    ports:
+      - "7791:5432"
+    networks:
+      - pgdb_network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d postgres" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+networks:
+  backend_services_network:
+    driver: bridge
+  pgdb_network:
+    driver: bridge
+
+volumes:
+  pgdb:
