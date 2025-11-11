@@ -11,7 +11,7 @@ load_dotenv()
 
 # Импорт приложения (main.py в корне сервиса)
 # Убедись, что PYTHONPATH охватывает корень проекта, либо запускай pytest из корня.
-from ..main import app
+from main import app
 
 # Утилита: получаем URL тестовой БД из окружения
 def _get_db_url():
@@ -83,7 +83,7 @@ def test_registration_success_creates_user_and_returns_token(client, db_url):
         assert password_hash != payload["password"]
 
         # Дополнительно проверим verify_password util
-        from ..app.utils import verify_password
+        from app.utils import verify_password
         assert verify_password(payload["password"], password_hash) is True
 
 def test_registration_conflict_returns_409(client, db_url):
