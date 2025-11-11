@@ -14,3 +14,8 @@ class UserResponse(BaseModel):
     username: Optional[str]
     display_name: Optional[str]
     email_verified: bool
+
+class AuthResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse
