@@ -22,6 +22,21 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Проверяет, соответствует ли открытый пароль хешу. Используется для логина."""
     return pwd_context.verify(plain_password, hashed_password)
 
+def password_validation(password: str) -> int:
+    if len(password) < 8:
+        return 1
+
+    if not re.search(r"[a-zA-Z]", password):
+        return 2
+
+    if not re.search(r"\d", password):
+        return 3
+
+    if not re.search(r"[!@#$%^&*()\-_=+[\]{};:,<.>/?]", password):
+        return 4
+
+    return 0
+
 # ---------- Токены (JWT) ----------
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     """
