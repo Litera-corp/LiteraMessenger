@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from .dto import UserCreateDTO
 from .repository import UserRepository
-from .utils import PasswordService, JWTTokenService
+from .utils import PasswordUtil, JWTUtil
 from .schemas import UserResponse
 from .config import settings
 
@@ -25,7 +25,7 @@ class UserService:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Username уже используется")
 
         # 2) password validation
-        match PasswordService.validate(password):
+        match PasswordUtil.validate(password):
             case 1:
                 raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                                     detail="Пароль должен содержать минимум 8 символов")
@@ -40,14 +40,14 @@ class UserService:
                                     detail="Пароль должен содержать хотя бы 1 спецсимвол")
 
         # 3) hash password
-        password_hash = PasswordService.hash(password)
+        password_hash = PasswordUtil.hash(password)
 
         # 4) create user in DB
         user = UserRepository.create_user(db, email=email, password_hash=password_hash, username=username, display_name=display_name)
 
         # 5) create token (subject = user.id)
         token_payload = {"sub": str(user.id), "email": user.email}
-        token = JWTTokenService.encode(token_payload, expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
+        token = JWTUtil.encode(token_payload, expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
 
         # 6) prepare response
         user_resp = UserResponse(

@@ -11,7 +11,7 @@ from passlib.context import CryptContext
 from .config import settings
 
 # ---------- Пароли ----------
-class PasswordService:
+class PasswordUtil:
     """
     Сервис для работы с паролями: хеширование, проверка, валидация.
     """
@@ -48,7 +48,7 @@ class PasswordService:
         return 0
 
 # ---------- Токены (JWT) ----------
-class JWTTokenService:
+class JWTUtil:
     """
     Сервис для создания и проверки JWT токенов.
     """
