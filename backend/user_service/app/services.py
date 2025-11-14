@@ -7,51 +7,53 @@ from .utils import hash_password, create_access_token, password_validation
 from .schemas import UserResponse
 from .config import settings
 
-def register_user(db: Session, email: str, password: str, username: str = None, display_name: str = None):
-    # 1) check email and username uniqueness
-    existing_user_by_email = UserRepository().get_user_by_email(db, email)
-    if existing_user_by_email:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email уже используется")
-    existing_user_by_username = UserRepository().get_user_by_username(db, username)
-    if existing_user_by_username:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Username уже используется")
+class UserService:
+    @staticmethod
+    def register_user(db: Session, email: str, password: str, username: str = None, display_name: str = None):
+        # 1) check email and username uniqueness
+        existing_user_by_email = UserRepository().get_user_by_email(db, email)
+        if existing_user_by_email:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email уже используется")
+        existing_user_by_username = UserRepository().get_user_by_username(db, username)
+        if existing_user_by_username:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Username уже используется")
 
-    # 2) password validation
-    match password_validation(password):
-        case 1:
-            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                                detail="Пароль должен содержать минимум 8 символов")
-        case 2:
-            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                                detail="Пароль должен содержать хотя бы 1 букву")
-        case 3:
-            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                                detail="Пароль должен содержать хотя бы 1 цифру")
-        case 4:
-            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                                detail="Пароль должен содержать хотя бы 1 спецсимвол")
+        # 2) password validation
+        match password_validation(password):
+            case 1:
+                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                                    detail="Пароль должен содержать минимум 8 символов")
+            case 2:
+                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                                    detail="Пароль должен содержать хотя бы 1 букву")
+            case 3:
+                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                                    detail="Пароль должен содержать хотя бы 1 цифру")
+            case 4:
+                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                                    detail="Пароль должен содержать хотя бы 1 спецсимвол")
 
-    # 3) hash password
-    password_hash = hash_password(password)
+        # 3) hash password
+        password_hash = hash_password(password)
 
-    # 4) create user in DB
-    user = UserRepository().create_user(db, email=email, password_hash=password_hash, username=username, display_name=display_name)
+        # 4) create user in DB
+        user = UserRepository().create_user(db, email=email, password_hash=password_hash, username=username, display_name=display_name)
 
-    # 5) create token (subject = user.id)
-    token_payload = {"sub": str(user.id), "email": user.email}
-    token = create_access_token(token_payload, expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
+        # 5) create token (subject = user.id)
+        token_payload = {"sub": str(user.id), "email": user.email}
+        token = create_access_token(token_payload, expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
 
-    # 6) prepare response
-    user_resp = UserResponse(
-        id=user.id,
-        email=user.email,
-        username=user.username,
-        display_name=user.display_name,
-        email_verified=user.email_verified
-    )
+        # 6) prepare response
+        user_resp = UserResponse(
+            id=user.id,
+            email=user.email,
+            username=user.username,
+            display_name=user.display_name,
+            email_verified=user.email_verified
+        )
 
-    return {
-        "access_token": token,
-        "token_type": "bearer",
-        "user": user_resp,
-    }
+        return {
+            "access_token": token,
+            "token_type": "bearer",
+            "user": user_resp,
+        }
