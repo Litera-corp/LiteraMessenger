@@ -84,9 +84,9 @@ def test_registration_success_creates_user_and_returns_token(client, db_url):
         # Пароль в БД не равен открытому
         assert password_hash != payload["password"]
 
-        # Дополнительно проверим verify_password util
-        from app.utils import verify_password
-        assert verify_password(payload["password"], password_hash) is True
+        # Дополнительно проверим verify util
+        from app.utils import PasswordService
+        assert PasswordService.verify(payload["password"], password_hash) is True
 
 def test_registration_conflict_returns_409(client, db_url):
     # Создадим пользователя напрямую, затем попробуем зарегистрировать с тем же email

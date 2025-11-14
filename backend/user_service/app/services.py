@@ -3,7 +3,7 @@ from datetime import timedelta
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from .repository import UserRepository
-from .utils import hash_password, create_access_token, password_validation
+from .utils import PasswordService, JWTTokenService
 from .schemas import UserResponse
 from .config import settings
 
@@ -11,15 +11,15 @@ class UserService:
     @staticmethod
     def register_user(db: Session, email: str, password: str, username: str = None, display_name: str = None):
         # 1) check email and username uniqueness
-        existing_user_by_email = UserRepository().get_user_by_email(db, email)
+        existing_user_by_email = UserRepository.get_by_email(db, email)
         if existing_user_by_email:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email уже используется")
-        existing_user_by_username = UserRepository().get_user_by_username(db, username)
+        existing_user_by_username = UserRepository.get_by_username(db, username)
         if existing_user_by_username:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Username уже используется")
 
         # 2) password validation
-        match password_validation(password):
+        match PasswordService.validate(password):
             case 1:
                 raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                                     detail="Пароль должен содержать минимум 8 символов")
@@ -34,14 +34,14 @@ class UserService:
                                     detail="Пароль должен содержать хотя бы 1 спецсимвол")
 
         # 3) hash password
-        password_hash = hash_password(password)
+        password_hash = PasswordService.hash(password)
 
         # 4) create user in DB
-        user = UserRepository().create_user(db, email=email, password_hash=password_hash, username=username, display_name=display_name)
+        user = UserRepository.create_user(db, email=email, password_hash=password_hash, username=username, display_name=display_name)
 
         # 5) create token (subject = user.id)
         token_payload = {"sub": str(user.id), "email": user.email}
-        token = create_access_token(token_payload, expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
+        token = JWTTokenService.encode(token_payload, expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
 
         # 6) prepare response
         user_resp = UserResponse(

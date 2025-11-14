@@ -10,45 +10,69 @@ import jwt  # PyJWT
 from passlib.context import CryptContext
 from .config import settings
 
-# создаём контекст для bcrypt
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 # ---------- Пароли ----------
-def hash_password(password: str) -> str:
-    """Принимает пароль в открытом виде и возвращает его безопасный хеш."""
-    return pwd_context.hash(password)
+class PasswordService:
+    """
+    Сервис для работы с паролями: хеширование, проверка, валидация.
+    """
+    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Проверяет, соответствует ли открытый пароль хешу. Используется для логина."""
-    return pwd_context.verify(plain_password, hashed_password)
+    @classmethod
+    def hash(cls, password: str) -> str:
+        """Хеширует пароль."""
+        return cls.pwd_context.hash(password)
 
-def password_validation(password: str) -> int:
-    if len(password) < 8:
-        return 1
+    @classmethod
+    def verify(cls, plain_password: str, hashed_password: str) -> bool:
+        """Проверяет пароль по хешу."""
+        return cls.pwd_context.verify(plain_password, hashed_password)
 
-    if not re.search(r"[a-zA-Z]", password):
-        return 2
-
-    if not re.search(r"\d", password):
-        return 3
-
-    if not re.search(r"[!@#$%^&*()\-_=+[\]{};:,<.>/?]", password):
-        return 4
-
-    return 0
+    @staticmethod
+    def validate(password: str) -> int:
+        """
+        Проверяет пароль и возвращает код:
+        0 — валиден
+        1 — слишком короткий
+        2 — нет буквы
+        3 — нет цифры
+        4 — нет спецсимвола
+        """
+        if len(password) < 8:
+            return 1
+        if not re.search(r"[a-zA-Z]", password):
+            return 2
+        if not re.search(r"\d", password):
+            return 3
+        if not re.search(r"[!@#$%^&*()\-_=+[\]{};:,<.>/?]", password):
+            return 4
+        return 0
 
 # ---------- Токены (JWT) ----------
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+class JWTTokenService:
     """
-    Создаёт JWT access token.
-    `data` - payload (например {"sub": user_id, "email": email})
+    Сервис для создания и проверки JWT токенов.
     """
-    to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
-    # PyJWT returns str on encode
-    return encoded_jwt
+    secret_key: str = settings.SECRET_KEY
+    algorithm: str = settings.ALGORITHM
+    default_exp_minutes: int = settings.ACCESS_TOKEN_EXPIRE_MINUTES
+
+    @classmethod
+    def encode(cls, data: dict, expires_delta: Optional[timedelta] = None) -> str:
+        """
+        Создаёт JWT токен.
+        """
+        to_encode = data.copy()
+        expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=cls.default_exp_minutes))
+        to_encode.update({"exp": expire})
+        return jwt.encode(to_encode, cls.secret_key, algorithm=cls.algorithm)
+
+    @classmethod
+    def decode(cls, token: str) -> dict:
+        """
+        Декодирует JWT токен.
+        Выбрасывает исключения PyJWT при ошибке.
+        """
+        return jwt.decode(token, cls.secret_key, algorithms=[cls.algorithm])
 
 # ---------- Верификационные коды ----------
 EMAIL_REGEX = re.compile(r"^[\w\.-]+@[\w\.-]+\.\w+$")

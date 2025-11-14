@@ -13,7 +13,7 @@ router = APIRouter()
 async def register_endpoint(user: UserRegisterRequest, db: Session = Depends(get_db)):
     # Если register_user синхронный, вызываем в threadpool
     result = await run_in_threadpool(
-        UserService().register_user,
+        UserService.register_user,
         db,
         user.email,
         user.password,
