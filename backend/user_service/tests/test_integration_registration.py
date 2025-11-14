@@ -7,15 +7,14 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
 
 from dotenv import load_dotenv
+from sqlalchemy.orm import sessionmaker
+
 load_dotenv()
 
-# Импорт приложения (main.py в корне сервиса)
-# Убедись, что PYTHONPATH охватывает корень проекта, либо запускай pytest из корня.
-from main import app
 
 # Утилита: получаем URL тестовой БД из окружения
 def _get_db_url():
-    return os.getenv("DATABASE_URL")
+    return os.getenv("TEST_DATABASE_URL")
 
 @pytest.fixture(scope="session")
 def db_url():
@@ -31,6 +30,7 @@ def apply_migrations(db_url):
     Требует, чтобы alembic был в PATH и DATABASE_URL/TEST_DATABASE_URL корректно установлен.
     """
     env = os.environ.copy()
+    env["TEST_DATABASE_URL"] = db_url
     env["DATABASE_URL"] = db_url
 
     # apply migrations
@@ -45,7 +45,11 @@ def apply_migrations(db_url):
     subprocess.run(["alembic", "downgrade", "base"], check=True, env=env)
 
 @pytest.fixture
-def client(apply_migrations):
+def client(db_url, apply_migrations, monkeypatch):
+    monkeypatch.setenv("TEST_DATABASE_URL", db_url)
+    monkeypatch.setenv("DATABASE_URL", db_url)
+    from main import app
+
     return TestClient(app)
 
 def test_registration_success_creates_user_and_returns_token(client, db_url):
@@ -66,6 +70,7 @@ def test_registration_success_creates_user_and_returns_token(client, db_url):
     assert data["user"]["email"] == email
 
     # Проверяем, что запись действительно в БД (schema users)
+    print(db_url)
     engine = create_engine(db_url)
     with engine.connect() as conn:
         row = conn.execute(
@@ -73,9 +78,6 @@ def test_registration_success_creates_user_and_returns_token(client, db_url):
             {"email": email}
         ).mappings().fetchone()
 
-        assert row is not None
-        assert row["email"] == email
-        password_hash = row["password_hash"]
         assert row is not None
         assert row["email"] == email
         password_hash = row["password_hash"]
@@ -105,3 +107,15 @@ def test_registration_conflict_returns_409(client, db_url):
 def test_registration_validation_returns_422(client):
     r = client.post("/users/register", json={})
     assert r.status_code == 422
+
+def test_registration_password_validation_returns_422(client, db_url):
+    email = f"conflict_pass_{int(time.time())}@example.com"
+    payload = {
+        "email": email,
+        "password": "strpass",
+        "username": "conflictpassuser"
+    }
+
+    r = client.post("/users/register", json=payload)
+    assert r.status_code == 422
+    assert r.json().get("detail") is not None

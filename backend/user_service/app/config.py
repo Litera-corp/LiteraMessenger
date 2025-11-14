@@ -5,6 +5,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     # Пример настроек, добавить/удалить поля по необходимости
     DATABASE_URL: Optional[str] = None
+    TEST_DATABASE_URL: Optional[str] = None
     SECRET_KEY: str = "change-me-for-production"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60

@@ -34,8 +34,11 @@ target_metadata = Base.metadata
 
 # Получаем URL из окружения (удобно для CI)
 DATABASE_URL = os.getenv("DATABASE_URL")
+TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL")
 if not DATABASE_URL:
     raise RuntimeError("DATABASE_URL is not set in environment")
+if not TEST_DATABASE_URL:
+    raise RuntimeError("TEST_DATABASE_URL is not set in environment")
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
@@ -49,16 +52,18 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    context.configure(
-        url=DATABASE_URL,
-        target_metadata=target_metadata,
-        literal_binds=True,
-        compare_type=True,
-        include_schemas=True,
-    )
+    urls = [DATABASE_URL, TEST_DATABASE_URL]
+    for url in urls:
+        context.configure(
+            url=url,
+            target_metadata=target_metadata,
+            literal_binds=True,
+            compare_type=True,
+            include_schemas=True,
+        )
 
-    with context.begin_transaction():
-        context.run_migrations()
+        with context.begin_transaction():
+            context.run_migrations()
 
 
 def run_migrations_online() -> None:
@@ -68,21 +73,23 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    connectable = create_engine(
-        DATABASE_URL,
-        poolclass=pool.NullPool,
-    )
-
-    with connectable.connect() as connection:
-        context.configure(
-            connection=connection,
-            target_metadata=target_metadata,
-            compare_type=True,
-            include_schemas=True,
+    urls = [DATABASE_URL, TEST_DATABASE_URL]
+    for url in urls:
+        connectable = create_engine(
+            url,
+            poolclass=pool.NullPool,
         )
 
-        with context.begin_transaction():
-            context.run_migrations()
+        with connectable.connect() as connection:
+            context.configure(
+                connection=connection,
+                target_metadata=target_metadata,
+                compare_type=True,
+                include_schemas=True,
+            )
+
+            with context.begin_transaction():
+                context.run_migrations()
 
 
 if context.is_offline_mode():
