@@ -1,18 +1,18 @@
 # app/services.py
 from datetime import timedelta
 from fastapi import HTTPException, status
-
-from .repository import get_user_by_email, get_user_by_username, create_user
+from sqlalchemy.orm import Session
+from .repository import UserRepository
 from .utils import hash_password, create_access_token, password_validation
 from .schemas import UserResponse
 from .config import settings
 
-def register_user(db, email: str, password: str, username: str = None, display_name: str = None):
+def register_user(db: Session, email: str, password: str, username: str = None, display_name: str = None):
     # 1) check email and username uniqueness
-    existing_user_by_email = get_user_by_email(db, email)
+    existing_user_by_email = UserRepository().get_user_by_email(db, email)
     if existing_user_by_email:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email уже используется")
-    existing_user_by_username = get_user_by_username(db, username)
+    existing_user_by_username = UserRepository().get_user_by_username(db, username)
     if existing_user_by_username:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Username уже используется")
 
@@ -35,7 +35,7 @@ def register_user(db, email: str, password: str, username: str = None, display_n
     password_hash = hash_password(password)
 
     # 4) create user in DB
-    user = create_user(db, email=email, password_hash=password_hash, username=username, display_name=display_name)
+    user = UserRepository().create_user(db, email=email, password_hash=password_hash, username=username, display_name=display_name)
 
     # 5) create token (subject = user.id)
     token_payload = {"sub": str(user.id), "email": user.email}
