@@ -2,6 +2,8 @@
 from datetime import timedelta
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
+
+from .dto import UserCreateDTO
 from .repository import UserRepository
 from .utils import PasswordService, JWTTokenService
 from .schemas import UserResponse
@@ -9,7 +11,11 @@ from .config import settings
 
 class UserService:
     @staticmethod
-    def register_user(db: Session, email: str, password: str, username: str = None, display_name: str = None):
+    def register_user(db: Session, dto: UserCreateDTO):
+        email = dto.email
+        password = dto.password
+        username = dto.username
+        display_name = dto.display_name
         # 1) check email and username uniqueness
         existing_user_by_email = UserRepository.get_by_email(db, email)
         if existing_user_by_email:
