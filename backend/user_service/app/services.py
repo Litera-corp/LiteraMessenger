@@ -16,40 +16,18 @@ class UserService:
         password = dto.password
         username = dto.username
         display_name = dto.display_name
-        # 1) check email and username uniqueness
-        existing_user_by_email = UserRepository.get_by_email(db, email)
-        if existing_user_by_email:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email уже используется")
-        existing_user_by_username = UserRepository.get_by_username(db, username)
-        if existing_user_by_username:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Username уже используется")
 
-        # 2) password validation
-        match PasswordUtil.validate(password):
-            case 1:
-                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                                    detail="Пароль должен содержать минимум 8 символов")
-            case 2:
-                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                                    detail="Пароль должен содержать хотя бы 1 букву")
-            case 3:
-                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                                    detail="Пароль должен содержать хотя бы 1 цифру")
-            case 4:
-                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                                    detail="Пароль должен содержать хотя бы 1 спецсимвол")
-
-        # 3) hash password
+        # 1) hash password
         password_hash = PasswordUtil.hash(password)
 
-        # 4) create user in DB
+        # 2) create user in DB
         user = UserRepository.create_user(db, email=email, password_hash=password_hash, username=username, display_name=display_name)
 
-        # 5) create token (subject = user.id)
+        # 3) create token (subject = user.id)
         token_payload = {"sub": str(user.id), "email": user.email}
         token = JWTUtil.encode(token_payload, expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
 
-        # 6) prepare response
+        # 4) prepare response
         user_resp = UserResponse(
             id=user.id,
             email=user.email,

@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-from app.routes import router as user_router
+from app.routes import register_app
 
 app = FastAPI()
 
-app.include_router(user_router, prefix="/users", tags=["users"])
+app.mount("/users", register_app)
