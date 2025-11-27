@@ -14,13 +14,13 @@ load_dotenv()
 
 # Утилита: получаем URL тестовой БД из окружения
 def _get_db_url():
-    return os.getenv("TEST_DATABASE_URL")
+    return os.getenv("DATABASE_URL_TEST")
 
 @pytest.fixture(scope="session")
 def db_url():
     url = _get_db_url()
     if not url:
-        pytest.skip("TEST_DATABASE_URL / DATABASE_URL not set — skipping integration tests")
+        pytest.skip("DATABASE_URL_TEST / DATABASE_URL not set — skipping integration tests")
     return url
 
 @pytest.fixture(scope="session", autouse=True)
@@ -30,7 +30,7 @@ def apply_migrations(db_url):
     Требует, чтобы alembic был в PATH и DATABASE_URL/TEST_DATABASE_URL корректно установлен.
     """
     env = os.environ.copy()
-    env["TEST_DATABASE_URL"] = db_url
+    env["DATABASE_URL_TEST"] = db_url
     env["DATABASE_URL"] = db_url
 
     # apply migrations
@@ -46,7 +46,7 @@ def apply_migrations(db_url):
 
 @pytest.fixture
 def client(db_url, apply_migrations, monkeypatch):
-    monkeypatch.setenv("TEST_DATABASE_URL", db_url)
+    monkeypatch.setenv("DATABASE_URL_TEST", db_url)
     monkeypatch.setenv("DATABASE_URL", db_url)
     from main import app
 

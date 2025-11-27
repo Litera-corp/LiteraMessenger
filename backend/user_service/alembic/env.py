@@ -34,10 +34,10 @@ target_metadata = Base.metadata
 
 # Получаем URL из окружения (удобно для CI)
 DATABASE_URL = os.getenv("DATABASE_URL")
-TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL")
+DATABASE_URL_TEST = os.getenv("DATABASE_URL_TEST")
 if not DATABASE_URL:
     raise RuntimeError("DATABASE_URL is not set in environment")
-if not TEST_DATABASE_URL:
+if not DATABASE_URL_TEST:
     raise RuntimeError("TEST_DATABASE_URL is not set in environment")
 
 def run_migrations_offline() -> None:
@@ -52,7 +52,7 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    urls = [DATABASE_URL, TEST_DATABASE_URL]
+    urls = [DATABASE_URL, DATABASE_URL_TEST]
     for url in urls:
         context.configure(
             url=url,
@@ -73,7 +73,7 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    urls = [DATABASE_URL, TEST_DATABASE_URL]
+    urls = [DATABASE_URL, DATABASE_URL_TEST]
     for url in urls:
         connectable = create_engine(
             url,
