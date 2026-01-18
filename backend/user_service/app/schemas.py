@@ -15,7 +15,20 @@ class UserResponse(BaseModel):
     display_name: Optional[str]
     email_verified: bool
 
+    class Config:
+        orm_mode = True
+
 class AuthResponse(BaseModel):
     access_token: str
+    refresh_token: Optional[str] = None
     token_type: str = "bearer"
     user: UserResponse
+
+class LoginRequest(BaseModel):
+    """
+    identifier: email OR username
+    device_name: optional, например "iPhone 14 Pro" или "web:chrome"
+    """
+    identifier: str
+    password: str
+    device_name: Optional[str] = None

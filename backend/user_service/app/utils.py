@@ -85,6 +85,35 @@ def generate_verification_code(length: int = 6) -> str:
     digits = string.digits
     return ''.join(secrets.choice(digits) for _ in range(length))
 
+# ---------- Refresh token ----------
+class RefreshTokenUtil:
+
+    DEFAULT_LENGTH_BYTES = 48
+    DEFAULT_EXPIRE_DAYS = getattr(settings, "REFRESH_TOKEN_EXPIRE_DAYS", 30)
+
+    @classmethod
+    def generate(cls, length_bytes: int = None) -> str:
+        """Генерирует secure opaque refresh token (URL-safe)."""
+        length_bytes = length_bytes or cls.DEFAULT_LENGTH_BYTES
+        return secrets.token_urlsafe(length_bytes)
+
+    @classmethod
+    def expires_at(cls, days: int = None) -> datetime:
+        """Возвращает datetime (UTC) когда истекает refresh token."""
+        days = days if days is not None else cls.DEFAULT_EXPIRE_DAYS
+        return datetime.now(timezone.utc) + timedelta(days=days)
+
+    @staticmethod
+    def is_valid_format(token: Optional[str], min_len: int = 20, max_len: int = 1024) -> bool:
+        """
+        Быстрая проверка формата token'а: не None, строка и разумная длина.
+        Не заменяет проверку в БД.
+        """
+        if not token or not isinstance(token, str):
+            return False
+        l = len(token)
+        return min_len <= l <= max_len
+
 # ---------- Логгер ----------
 logger = logging.getLogger("user_service")
 logger.setLevel(logging.INFO)
